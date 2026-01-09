@@ -22,7 +22,8 @@ import {
   ChevronRight,
   HandCoins,
   History,
-  Check
+  Check,
+  CalendarRange
 } from 'lucide-react';
 import { 
   IncomeEntry, 
@@ -81,20 +82,31 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'dan
   );
 };
 
-const DateSelector = ({ value, onChange, label }: any) => (
-  <div className="group relative flex items-center gap-3 bg-white border-2 border-slate-100 px-4 py-2.5 rounded-2xl shadow-sm focus-within:border-blue-500 transition-all">
-    <div className="flex flex-col">
-      {label && <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</span>}
-      <div className="flex items-center gap-2">
-        <Calendar size={14} className="text-blue-500" />
-        <input 
-          type="date" 
-          value={value} 
-          onChange={(e) => onChange(e.target.value)} 
-          className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer" 
-        />
+const DateSelector = ({ value, onChange, label, onResetToday }: any) => (
+  <div className="flex items-center gap-2">
+    <div className="group relative flex items-center gap-3 bg-white border-2 border-slate-200 px-4 py-2 rounded-2xl shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-50 transition-all">
+      <div className="flex flex-col">
+        {label && <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</span>}
+        <div className="flex items-center gap-2">
+          <Calendar size={14} className="text-blue-500" />
+          <input 
+            type="date" 
+            value={value} 
+            onChange={(e) => onChange(e.target.value)} 
+            className="bg-transparent text-sm font-bold text-slate-700 outline-none cursor-pointer" 
+          />
+        </div>
       </div>
     </div>
+    {onResetToday && (
+      <button 
+        onClick={onResetToday}
+        title="Go to Today"
+        className="p-3 bg-white border-2 border-slate-200 rounded-2xl text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:bg-blue-50 transition-all shadow-sm active:scale-90"
+      >
+        <CalendarRange size={20} />
+      </button>
+    )}
   </div>
 );
 
@@ -179,7 +191,12 @@ const App: React.FC = () => {
             <button className="lg:hidden p-3 bg-white border border-slate-100 shadow-sm rounded-xl text-slate-600" onClick={() => setIsSidebarOpen(true)}><Menu size={20} /></button>
             <h2 className="hidden md:block font-black text-slate-800 text-xl tracking-tight capitalize">{activeView}</h2>
           </div>
-          <DateSelector value={selectedDate} onChange={setSelectedDate} label="Working Date" />
+          <DateSelector 
+            value={selectedDate} 
+            onChange={setSelectedDate} 
+            label="Working Date" 
+            onResetToday={() => setSelectedDate(getCurrentDate())}
+          />
         </header>
 
         <div className="p-6 lg:p-10 max-w-7xl mx-auto w-full">
@@ -332,11 +349,17 @@ const IncomeView = ({ income, setIncome }: any) => {
           <p className="text-sm font-black text-slate-400 mt-1 uppercase tracking-widest">Total Revenue: <span className="text-blue-600">{formatCurrency(total)}</span></p>
         </div>
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-3 bg-white border-2 border-slate-100 p-2 rounded-2xl shadow-sm">
-             <input type="date" value={range.start} onChange={e => setRange({...range, start: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-             <ChevronRight size={14} className="text-slate-300" />
-             <input type="date" value={range.end} onChange={e => setRange({...range, end: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-          </div>
+          <DateSelector 
+            value={range.start} 
+            onChange={(v:any) => setRange({...range, start: v})} 
+            label="Start Date" 
+          />
+          <ChevronRight size={14} className="text-slate-300 hidden md:block" />
+          <DateSelector 
+            value={range.end} 
+            onChange={(v:any) => setRange({...range, end: v})} 
+            label="End Date" 
+          />
           <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-8 py-3.5 rounded-[1.25rem] flex items-center gap-2 shadow-2xl shadow-blue-100 font-black active:scale-95 transition-all"><Plus size={20} /> New Record</button>
         </div>
       </div>
@@ -422,11 +445,17 @@ const ExpenseView = ({ expenses, setExpenses }: any) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div><h1 className="text-4xl font-black text-slate-900 tracking-tighter">Expenses</h1><p className="text-sm font-black text-slate-400 mt-1 uppercase tracking-widest">Total Spend: <span className="text-orange-600">{formatCurrency(total)}</span></p></div>
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-3 bg-white border-2 border-slate-100 p-2 rounded-2xl shadow-sm">
-             <input type="date" value={range.start} onChange={e => setRange({...range, start: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-             <ChevronRight size={14} className="text-slate-300" />
-             <input type="date" value={range.end} onChange={e => setRange({...range, end: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-          </div>
+          <DateSelector 
+            value={range.start} 
+            onChange={(v:any) => setRange({...range, start: v})} 
+            label="Start Date" 
+          />
+          <ChevronRight size={14} className="text-slate-300 hidden md:block" />
+          <DateSelector 
+            value={range.end} 
+            onChange={(v:any) => setRange({...range, end: v})} 
+            label="End Date" 
+          />
           <button onClick={() => setIsModalOpen(true)} className="bg-orange-600 text-white px-8 py-3.5 rounded-[1.25rem] flex items-center gap-2 shadow-2xl shadow-orange-100 font-black active:scale-95 transition-all"><Plus size={20} /> Log Expense</button>
         </div>
       </div>
@@ -481,6 +510,7 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
   const [isSalaryModalOpen, setIsSalaryModalOpen] = useState<string | null>(null);
   const [isDeleteStaffOpen, setIsDeleteStaffOpen] = useState<string | null>(null);
   const [isAttendanceHistoryOpen, setIsAttendanceHistoryOpen] = useState<string | null>(null);
+  const [isAttendanceConfirmOpen, setIsAttendanceConfirmOpen] = useState<{staffId: string, status: AttendanceStatus} | null>(null);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [salaryAmt, setSalaryAmt] = useState('');
   const [formData, setFormData] = useState({ name: '', phone: '', role: '', monthlySalary: '' });
@@ -516,12 +546,12 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
     const paymentId = Math.random().toString(36).substr(2, 9);
     setSalaryPayments([{ id: paymentId, staffId, date: selectedDate, amount, type: 'Salary' }, ...salaryPayments]);
 
-    // AUTO-SYNC TO EXPENSES
+    // AUTO-SYNC TO EXPENSES WITH CORRECT LABELING
     const expenseEntry: ExpenseEntry = {
       id: `sal-${paymentId}`,
       date: selectedDate,
       category: ExpenseCategory.OTHER,
-      description: `Staff Pay: ${targetStaff?.name || 'Employee'}`,
+      description: `[Staff Salary] Payout to ${targetStaff?.name || 'Employee'}`,
       amount: amount,
       isDeleted: false
     };
@@ -536,6 +566,24 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
   const getPresentDaysCount = (staffId: string) => {
     const currentMonth = getMonthYear(selectedDate);
     return attendance.filter((a: any) => a.staffId === staffId && a.status === AttendanceStatus.PRESENT && getMonthYear(a.date) === currentMonth).length;
+  };
+
+  const triggerAttendanceToggle = (staffId: string, currentStatus: AttendanceStatus | undefined) => {
+    const newStatus = currentStatus === AttendanceStatus.PRESENT ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT;
+    setIsAttendanceConfirmOpen({ staffId, status: newStatus });
+  };
+
+  const confirmAttendanceToggle = () => {
+    if (!isAttendanceConfirmOpen) return;
+    const { staffId, status } = isAttendanceConfirmOpen;
+    const existing = attendance.find((a: any) => a.staffId === staffId && a.date === selectedDate);
+    
+    if (existing) {
+      setAttendance(attendance.map((a: any) => a.id === existing.id ? { ...a, status } : a));
+    } else {
+      setAttendance([...attendance, { id: Math.random().toString(36).substr(2, 9), staffId, date: selectedDate, status }]);
+    }
+    setIsAttendanceConfirmOpen(null);
   };
 
   return (
@@ -557,14 +605,7 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
             return (
               <div 
                 key={s.id} 
-                onClick={() => {
-                  const existing = attendance.find((a: any) => a.staffId === s.id && a.date === selectedDate);
-                  if (existing) {
-                    setAttendance(attendance.map((a: any) => a.id === existing.id ? { ...a, status: a.status === AttendanceStatus.PRESENT ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT } : a));
-                  } else {
-                    setAttendance([...attendance, { id: Math.random().toString(36).substr(2, 9), staffId: s.id, date: selectedDate, status: AttendanceStatus.PRESENT }]);
-                  }
-                }}
+                onClick={() => triggerAttendanceToggle(s.id, record?.status)}
                 className={`p-6 rounded-[2rem] border-2 transition-all cursor-pointer select-none group relative overflow-hidden ${isPresent ? 'bg-emerald-50 border-emerald-100 shadow-xl shadow-emerald-50' : 'bg-white border-slate-100 hover:border-slate-300'}`}
               >
                 <div className="flex justify-between items-center relative z-10">
@@ -602,10 +643,10 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
                 <div className="flex-1 w-full space-y-4">
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-400">
                     <span>Paid: {formatCurrency(paid)}</span>
-                    <span className="text-slate-800">Target: {formatCurrency(s.monthlySalary)}</span>
+                    <span className="text-slate-800 font-black">Target: {formatCurrency(s.monthlySalary)}</span>
                   </div>
-                  <div className="h-4 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
-                    <div className="h-full bg-blue-600 rounded-full transition-all duration-1000 shadow-lg shadow-blue-100" style={{ width: `${progress}%` }}></div>
+                  <div className="h-5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-1">
+                    <div className="h-full bg-gradient-to-r from-blue-500 to-blue-700 rounded-full transition-all duration-1000 shadow-lg shadow-blue-100" style={{ width: `${progress}%` }}></div>
                   </div>
                   <div className="flex justify-between items-center">
                     <p className="text-sm font-black text-orange-600 flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-xl"><Clock size={16}/> Balance: {formatCurrency(balance)}</p>
@@ -653,6 +694,7 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
         </div>
       )}
 
+      {/* Staff Modals */}
       <Modal isOpen={isStaffModalOpen} onClose={closeStaffModal} title={editingStaffId ? 'Update Profile' : 'Register Employee'}>
         <form onSubmit={addOrUpdateStaff} className="space-y-5">
           <div className="flex flex-col"><label className="text-[10px] font-black text-slate-400 uppercase mb-2">Legal Name</label><input type="text" placeholder="Full name..." required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 font-bold" /></div>
@@ -668,7 +710,7 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
       <Modal isOpen={!!isSalaryModalOpen} onClose={() => setIsSalaryModalOpen(null)} title="Payout Record">
         <div className="space-y-6">
           <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-             <p className="text-blue-900 font-bold text-sm leading-relaxed">Recording a payment for <b>{staff.find((s:any) => s.id === isSalaryModalOpen)?.name}</b> will automatically reflect in today's expenses.</p>
+             <p className="text-blue-900 font-bold text-sm leading-relaxed">Recording a payment for <b>{staff.find((s:any) => s.id === isSalaryModalOpen)?.name}</b> will automatically reflect in today's expenses under <b>Staff Salary</b>.</p>
           </div>
           <div className="flex flex-col">
              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Amount to Release (INR)</label>
@@ -677,6 +719,16 @@ const StaffView = ({ staff, setStaff, attendance, setAttendance, salaryPayments,
           <button onClick={handleSalaryPayment} className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-2xl shadow-emerald-100 hover:bg-emerald-700 transition-all">Settle Payment</button>
         </div>
       </Modal>
+
+      {/* Attendance Confirmation */}
+      <ConfirmDialog 
+        isOpen={!!isAttendanceConfirmOpen} 
+        onClose={() => setIsAttendanceConfirmOpen(null)} 
+        onConfirm={confirmAttendanceToggle}
+        title="Update Attendance?"
+        message={`Are you sure you want to mark ${staff.find(s => s.id === isAttendanceConfirmOpen?.staffId)?.name} as ${isAttendanceConfirmOpen?.status} for ${selectedDate}?`}
+        type={isAttendanceConfirmOpen?.status === AttendanceStatus.PRESENT ? 'success' : 'danger'}
+      />
 
       <ConfirmDialog 
         isOpen={!!isDeleteStaffOpen} 
@@ -734,11 +786,17 @@ const CreditView = ({ credits, setCredits }: any) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Receivables</h1>
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-3 bg-white border-2 border-slate-100 p-2 rounded-2xl shadow-sm">
-             <input type="date" value={range.start} onChange={e => setRange({...range, start: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-             <ChevronRight size={14} className="text-slate-300" />
-             <input type="date" value={range.end} onChange={e => setRange({...range, end: e.target.value})} className="text-xs font-bold outline-none cursor-pointer p-1" />
-          </div>
+          <DateSelector 
+            value={range.start} 
+            onChange={(v:any) => setRange({...range, start: v})} 
+            label="Start Date" 
+          />
+          <ChevronRight size={14} className="text-slate-300 hidden md:block" />
+          <DateSelector 
+            value={range.end} 
+            onChange={(v:any) => setRange({...range, end: v})} 
+            label="End Date" 
+          />
           <button onClick={() => setIsModalOpen(true)} className="bg-red-600 text-white px-8 py-3.5 rounded-[1.25rem] flex items-center gap-2 shadow-2xl shadow-red-100 font-black hover:bg-red-700 transition-all active:scale-95"><Plus size={20} /> Open Credit</button>
         </div>
       </div>
