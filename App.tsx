@@ -35,29 +35,46 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
     setLoading(true);
     setError('');
     
+    // Clean inputs to avoid whitespace issues
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+
     try {
-      // Query the manager_profiles table for the matching username and password
+      // 1. First, check if the table is even accessible
       const { data, error: queryError } = await supabase
         .from('manager_profiles')
-        .select('*')
-        .eq('username', username)
-        .eq('password_hash', password)
-        .single();
+        .select('username, password_hash')
+        .eq('username', cleanUsername)
+        .eq('password_hash', cleanPassword);
 
-      if (queryError || !data) {
-        setError('Invalid Manager Credentials');
-      } else {
-        onLogin();
+      if (queryError) {
+        console.error('Supabase Auth Error:', queryError);
+        // If it's a 406 or RLS error, it usually means policies are missing
+        if (queryError.code === '42501') {
+          setError('Permission Denied: Check Supabase RLS Policies');
+        } else {
+          setError(`Database Error: ${queryError.message}`);
+        }
+        return;
       }
-    } catch (err) {
-      setError('Connection failed. Please check your network or credentials.');
+
+      if (data && data.length > 0) {
+        // Successful login
+        onLogin();
+      } else {
+        // No matching record found
+        setError('Incorrect Username or Password');
+      }
+    } catch (err: any) {
+      console.error('Login Exception:', err);
+      setError('Connection failed. Please check your internet.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 relative overflow-hidden font-sans">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px]"></div>
       <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
         <div className="text-center mb-10">
@@ -70,24 +87,60 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         <div className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Username</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Manager ID</label>
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500" size={20} />
-                <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" placeholder="admin" />
+                <input 
+                  type="text" 
+                  required 
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)} 
+                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" 
+                  placeholder="Username" 
+                />
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Password</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Secure PIN/Pass</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500" size={20} />
-                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" placeholder="••••••••" />
+                <input 
+                  type="password" 
+                  required 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" 
+                  placeholder="••••••••" 
+                />
               </div>
             </div>
-            {error && <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center gap-3 animate-in shake"><AlertCircle size={16} />{error}</div>}
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-lg shadow-2xl hover:bg-blue-700 active:scale-95 disabled:opacity-70 transition-all">
-              {loading ? 'Authenticating...' : 'Unlock System'}
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center gap-3 animate-in shake">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
+            <button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-lg shadow-2xl hover:bg-blue-700 active:scale-95 disabled:opacity-70 transition-all flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Verifying...
+                </>
+              ) : (
+                'Unlock Dashboard'
+              )}
             </button>
           </form>
+          <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest leading-loose">
+              Enterprise Access Control<br/>
+              HotelFlow Management System v2.1
+            </p>
+          </div>
         </div>
       </div>
     </div>
