@@ -78,4 +78,4 @@ export interface CreditRecord {
   isDeleted: boolean;
 }
 
-export type View = 'dashboard' | 'income' | 'expenses' | 'staff' | 'credit' | 'reports';
+export type View = 'dashboard' | 'income' | 'expenses' | 'staff' | 'credit' | 'reports' | 'reminders';
