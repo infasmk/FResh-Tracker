@@ -23,7 +23,11 @@ import {
   HandCoins,
   History,
   Check,
-  CalendarRange
+  CalendarRange,
+  Lock,
+  User,
+  LogOut,
+  Hotel
 } from 'lucide-react';
 import { 
   IncomeEntry, 
@@ -42,6 +46,102 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Legend
 } from 'recharts';
+
+// --- Auth Guard Component ---
+
+const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // Simulate auth check - Defaulting to admin/admin for this implementation
+    setTimeout(() => {
+      if (username === 'admin' && password === 'admin') {
+        onLogin();
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
+      setLoading(false);
+    }, 800);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px]"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-100/50 rounded-full blur-[120px]"></div>
+
+      <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-[2.5rem] shadow-2xl shadow-blue-200 text-white mb-6">
+            <Hotel size={40} strokeWidth={2.5} />
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">HotelFlow</h1>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Management & Accounts</p>
+        </div>
+
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-100">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Manager Username</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                <input 
+                  type="text" 
+                  required 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold text-slate-700"
+                  placeholder="admin"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Security Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                <input 
+                  type="password" 
+                  required 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold text-slate-700"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-5 rounded-[1.5rem] font-black text-lg shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-3"
+            >
+              {loading ? <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Unlock System'}
+            </button>
+          </form>
+        </div>
+        
+        <p className="text-center mt-10 text-slate-400 text-xs font-medium">
+          Protected session. Unauthorized access is monitored.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 // --- Custom UI Components ---
 
@@ -64,7 +164,7 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'dan
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div className="text-center mb-8">
-        <div className={`w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center ${type === 'danger' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+        <div className={`w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center ${type === 'danger' ? 'bg-red-50 text-red-600' : type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
           <AlertCircle size={32} />
         </div>
         <p className="text-slate-600 font-medium leading-relaxed">{message}</p>
@@ -73,7 +173,7 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'dan
         <button onClick={onClose} className="flex-1 px-4 py-3.5 rounded-2xl border-2 border-slate-100 font-bold text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
         <button 
           onClick={onConfirm} 
-          className={`flex-1 px-4 py-3.5 rounded-2xl font-black text-white transition-all shadow-lg active:scale-95 ${type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'}`}
+          className={`flex-1 px-4 py-3.5 rounded-2xl font-black text-white transition-all shadow-lg active:scale-95 ${type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-100' : type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'}`}
         >
           Confirm
         </button>
@@ -84,7 +184,7 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, type = 'dan
 
 const DateSelector = ({ value, onChange, label, onResetToday }: any) => (
   <div className="flex items-center gap-2">
-    <div className="group relative flex items-center gap-3 bg-white border-2 border-slate-200 px-4 py-2 rounded-2xl shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-50 transition-all">
+    <div className="group relative flex items-center gap-3 bg-white border-2 border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-50 transition-all">
       <div className="flex flex-col">
         {label && <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</span>}
         <div className="flex items-center gap-2">
@@ -111,6 +211,7 @@ const DateSelector = ({ value, onChange, label, onResetToday }: any) => (
 );
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('hf_auth') === 'true');
   const [activeView, setActiveView] = useState<View>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
@@ -124,13 +225,21 @@ const App: React.FC = () => {
   const [credits, setCredits] = useState<CreditRecord[]>(() => JSON.parse(localStorage.getItem('hf_credits') || '[]'));
 
   useEffect(() => {
-    localStorage.setItem('hf_income', JSON.stringify(income));
-    localStorage.setItem('hf_expenses', JSON.stringify(expenses));
-    localStorage.setItem('hf_staff', JSON.stringify(staff));
-    localStorage.setItem('hf_attendance', JSON.stringify(attendance));
-    localStorage.setItem('hf_salaries', JSON.stringify(salaryPayments));
-    localStorage.setItem('hf_credits', JSON.stringify(credits));
-  }, [income, expenses, staff, attendance, salaryPayments, credits]);
+    localStorage.setItem('hf_auth', isAuthenticated.toString());
+    if (isAuthenticated) {
+      localStorage.setItem('hf_income', JSON.stringify(income));
+      localStorage.setItem('hf_expenses', JSON.stringify(expenses));
+      localStorage.setItem('hf_staff', JSON.stringify(staff));
+      localStorage.setItem('hf_attendance', JSON.stringify(attendance));
+      localStorage.setItem('hf_salaries', JSON.stringify(salaryPayments));
+      localStorage.setItem('hf_credits', JSON.stringify(credits));
+    }
+  }, [income, expenses, staff, attendance, salaryPayments, credits, isAuthenticated]);
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('hf_auth');
+  };
 
   const reminderCount = useMemo(() => {
     const today = getCurrentDate();
@@ -142,6 +251,10 @@ const App: React.FC = () => {
     }).length;
     return overdueCredits + unpaidStaff;
   }, [credits, staff, salaryPayments]);
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   const SidebarItem = ({ view, icon: Icon, label, badge }: any) => (
     <button
@@ -182,6 +295,14 @@ const App: React.FC = () => {
             <SidebarItem view="credit" icon={CreditCard} label="Credit Records" />
             <SidebarItem view="reports" icon={BarChart3} label="Insights" />
           </nav>
+          
+          <button 
+            onClick={handleLogout}
+            className="mt-10 flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all font-bold group"
+          >
+            <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
+            Sign Out
+          </button>
         </div>
       </aside>
 
@@ -212,6 +333,9 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+// ... Rest of the components (DashboardView, RemindersView, IncomeView, etc.) ...
+// Note: Keeping the existing components as they were in the previous App.tsx state but integrated into this new auth structure.
 
 const DashboardView = ({ income, expenses, credits, staff, attendance, selectedDate }: any) => {
   const stats = useMemo(() => {
