@@ -5,7 +5,7 @@ import {
   LayoutDashboard, TrendingUp, TrendingDown, Users, CreditCard, 
   BarChart3, Menu, X, Plus, Bell, Trash2, Pencil, Calendar, 
   AlertCircle, Clock, ChevronRight, HandCoins, History, Check, 
-  CalendarRange, Lock, User, LogOut, Hotel
+  CalendarRange, Lock, User, LogOut, Hotel, Cloud, CloudOff, RefreshCw
 } from 'lucide-react';
 import { 
   IncomeEntry, ExpenseEntry, Staff, AttendanceRecord, SalaryPayment, 
@@ -25,52 +25,27 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // --- Auth Component ---
 
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     
-    // Clean inputs to avoid whitespace issues
-    const cleanUsername = username.trim();
     const cleanPassword = password.trim();
+    const REQUIRED_PASSWORD = "fb@5star";
 
-    try {
-      // 1. First, check if the table is even accessible
-      const { data, error: queryError } = await supabase
-        .from('manager_profiles')
-        .select('username, password_hash')
-        .eq('username', cleanUsername)
-        .eq('password_hash', cleanPassword);
-
-      if (queryError) {
-        console.error('Supabase Auth Error:', queryError);
-        // If it's a 406 or RLS error, it usually means policies are missing
-        if (queryError.code === '42501') {
-          setError('Permission Denied: Check Supabase RLS Policies');
-        } else {
-          setError(`Database Error: ${queryError.message}`);
-        }
-        return;
-      }
-
-      if (data && data.length > 0) {
-        // Successful login
+    // Immediate check for fixed password
+    setTimeout(() => {
+      if (cleanPassword === REQUIRED_PASSWORD) {
         onLogin();
       } else {
-        // No matching record found
-        setError('Incorrect Username or Password');
+        setError('Incorrect Access Password');
+        setLoading(false);
       }
-    } catch (err: any) {
-      console.error('Login Exception:', err);
-      setError('Connection failed. Please check your internet.');
-    } finally {
-      setLoading(false);
-    }
+    }, 600); // Slight delay for professional feel
   };
 
   return (
@@ -82,40 +57,27 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             <Hotel size={40} />
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">HotelFlow</h1>
-          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Management Cloud</p>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Secure Access Required</p>
         </div>
         <div className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Manager ID</label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500" size={20} />
-                <input 
-                  type="text" 
-                  required 
-                  value={username} 
-                  onChange={(e) => setUsername(e.target.value)} 
-                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" 
-                  placeholder="Username" 
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Secure PIN/Pass</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-center">Enter Access PIN</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500" size={20} />
                 <input 
                   type="password" 
                   required 
+                  autoFocus
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
-                  className="w-full bg-slate-50 border-2 border-slate-50 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-bold" 
+                  className="w-full bg-slate-50 border-2 border-slate-50 p-5 pl-12 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all font-black text-center text-xl tracking-[0.3em]" 
                   placeholder="••••••••" 
                 />
               </div>
             </div>
             {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center gap-3 animate-in shake">
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold flex items-center justify-center gap-3 animate-in shake">
                 <AlertCircle size={16} />
                 {error}
               </div>
@@ -137,12 +99,40 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
           </form>
           <div className="mt-8 pt-6 border-t border-slate-50 text-center">
             <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest leading-loose">
-              Enterprise Access Control<br/>
-              HotelFlow Management System v2.1
+              Enterprise Cloud Management<br/>
+              HotelFlow System v2.1
             </p>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// --- Connection Badge ---
+const ConnectionBadge = ({ status }: { status: 'loading' | 'connected' | 'error' }) => {
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider transition-all duration-500 ${
+      status === 'connected' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+      status === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
+      'bg-slate-50 border-slate-100 text-slate-400'
+    }`}>
+      {status === 'loading' && <RefreshCw size={12} className="animate-spin" />}
+      {status === 'connected' && (
+        <>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          Cloud Sync
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <CloudOff size={12} />
+          Offline
+        </>
+      )}
     </div>
   );
 };
@@ -206,6 +196,7 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
   const [loading, setLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState<'loading' | 'connected' | 'error'>('loading');
 
   // Supabase Data State
   const [income, setIncome] = useState<IncomeEntry[]>([]);
@@ -217,6 +208,7 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setDbStatus('loading');
     try {
       const [inc, exp, stf, att, sal, cre] = await Promise.all([
         supabase.from('income').select('*').eq('is_deleted', false),
@@ -227,6 +219,12 @@ const App: React.FC = () => {
         supabase.from('credits').select('*').eq('is_deleted', false),
       ]);
       
+      if (inc.error || exp.error || stf.error) {
+        setDbStatus('error');
+      } else {
+        setDbStatus('connected');
+      }
+
       if (inc.data) setIncome(inc.data);
       if (exp.data) setExpenses(exp.data);
       if (stf.data) setStaff(stf.data.map(s => ({ ...s, monthlySalary: s.monthly_salary })));
@@ -235,6 +233,7 @@ const App: React.FC = () => {
       if (cre.data) setCredits(cre.data.map(c => ({ ...c, customerName: c.customer_name, dueDate: c.due_date })));
     } catch (err) {
       console.error('Fetch Error:', err);
+      setDbStatus('error');
     } finally {
       setLoading(false);
     }
@@ -303,7 +302,10 @@ const App: React.FC = () => {
             <button className="lg:hidden p-3 bg-white border rounded-xl text-slate-600" onClick={() => setIsSidebarOpen(true)}><Menu size={20} /></button>
             <h2 className="hidden md:block font-black text-slate-800 text-xl tracking-tight capitalize">{activeView}</h2>
           </div>
-          <DateSelector value={selectedDate} onChange={setSelectedDate} label="Working Date" onResetToday={() => setSelectedDate(getCurrentDate())} />
+          <div className="flex items-center gap-6">
+            <ConnectionBadge status={dbStatus} />
+            <DateSelector value={selectedDate} onChange={setSelectedDate} label="Working Date" onResetToday={() => setSelectedDate(getCurrentDate())} />
+          </div>
         </header>
 
         <div className="p-6 lg:p-10 max-w-7xl mx-auto w-full">
